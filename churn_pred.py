@@ -96,161 +96,161 @@ def encode_categorical_dataframe(featDF,categoricalDF):
     return featDF, categ_lookup_encoding
 
 
+if "name" == "__main__":
+    # script starts here
+    filepath    = '/Users/Sowmya/Documents/Data_for_Practice/Logistic_Regression/Telcom_Customer_Churn/'
+    filename    = 'WA_Fn-UseC_-Telco-Customer-Churn.csv'
+    dataDF      = read_data_from_dir(filepath,filename)
 
-# script starts here
-filepath    = '/Users/Sowmya/Documents/Data_for_Practice/Logistic_Regression/Telcom_Customer_Churn/'
-filename    = 'WA_Fn-UseC_-Telco-Customer-Churn.csv'
-dataDF      = read_data_from_dir(filepath,filename)
+    # browse data
+    # print(dataDF.info())
+    # https://stats.stackexchange.com/questions/201962/classification-algorithm-for-categorical-data
 
-# browse data
-# print(dataDF.info())
-# https://stats.stackexchange.com/questions/201962/classification-algorithm-for-categorical-data
+    # split primary key from features and outcome set in dataframe
+    prime_key            = 'customerID'
+    prime_keyDF, dataDF  = split_onefeature_frmDf(dataDF, prime_key)
 
-# split primary key from features and outcome set in dataframe
-prime_key            = 'customerID'
-prime_keyDF, dataDF  = split_onefeature_frmDf(dataDF, prime_key)
+    # # browse datatypes in dataDF to catch fix inaccurate data-types
+    # unique_vals_dataframe(dataDF)
 
-# # browse datatypes in dataDF to catch fix inaccurate data-types
-# unique_vals_dataframe(dataDF)
+    # fix datatype of the dataDF's columns from string-object to numeric datatype
+    list_col  = ['tenure','TotalCharges']
+    dataDF    = convert_col_numeric(dataDF,list_col)
+    dataDF    = dataDF.replace('',np.nan)             # also convert empty strings to NaN
+    dataDF    = dataDF.dropna(axis=0,how='any')       #drop rows with any NaN values
 
-# fix datatype of the dataDF's columns from string-object to numeric datatype
-list_col  = ['tenure','TotalCharges']
-dataDF    = convert_col_numeric(dataDF,list_col)
-dataDF    = dataDF.replace('',np.nan)             # also convert empty strings to NaN
-dataDF    = dataDF.dropna(axis=0,how='any')       #drop rows with any NaN values
+    # Create a look-up table for categorical variables
+    categoricalDict,categoricalDF = get_categorical_vars(dataDF)
 
-# Create a look-up table for categorical variables
-categoricalDict,categoricalDF = get_categorical_vars(dataDF)
+    # encode categorical variables in features and outcome columns of dataDF
+    originalDF= dataDF.copy()
+    dataDF, categ_encode_lookup = encode_categorical_dataframe(dataDF,categoricalDF)
+    # pprint.pprint(dataDF.iloc[0,:])
 
-# encode categorical variables in features and outcome columns of dataDF
-originalDF= dataDF.copy()
-dataDF, categ_encode_lookup = encode_categorical_dataframe(dataDF,categoricalDF)
-# pprint.pprint(dataDF.iloc[0,:])
-
-# Split data dataframe to outcome variable's dataframe and original data dataframe with only features columns
-outcome_colname            = 'Churn'
-outcomeVarDF, fdataDF       = split_onefeature_frmDf(dataDF, outcome_colname)
-outcomeCatVarDF, catDataDF  = split_onefeature_frmDf(originalDF, outcome_colname)
-
-
-
-
-'''totalChurn      = outcomeVarDF.sum(axis=1)
-totalNoChurn    = outcomeVarDF.shape[0] - outcomeVarDF.sum(axis=1)
-totalChurnArray = np.array([totalChurn, totalNoChurn ])'''
-
-# summaries https://www.shanelynn.ie/summarising-aggregation-and-grouping-data-in-python-pandas/
-
-print('sum of Tenure per churn' + repr(originalDF.groupby('Churn')['tenure'].sum()))
-print('sum of churn per gender ' + repr(dataDF.groupby('SeniorCitizen')['Churn'].sum()))
-
-# why am I not able to work with dataDF
-
-# plot relationships
-
-
-# Box plot
-#sb.catplot(x='gender',y='TotalCharges',hue = 'Churn', data=originalDF) #equal churns in gender
+    # Split data dataframe to outcome variable's dataframe and original data dataframe with only features columns
+    outcome_colname            = 'Churn'
+    outcomeVarDF, fdataDF       = split_onefeature_frmDf(dataDF, outcome_colname)
+    outcomeCatVarDF, catDataDF  = split_onefeature_frmDf(originalDF, outcome_colname)
 
 
 
-#sb.catplot(x='SeniorCitizen',y='tenure',hue='Churn',kind= 'box',data=originalDF) #the strip, default shows that seniors are more churned
 
-#sb.catplot(x='Churn',y='tenure',kind='box',data = originalDF) # we can see tenure is a significant predictor
+    '''totalChurn      = outcomeVarDF.sum(axis=1)
+    totalNoChurn    = outcomeVarDF.shape[0] - outcomeVarDF.sum(axis=1)
+    totalChurnArray = np.array([totalChurn, totalNoChurn ])'''
 
-'''sb.catplot(x='gender',y='tenure',hue='Churn',kind = 'box',data=originalDF) #there is no difference
-sb.catplot(x='SeniorCitizen',y='tenure',hue='Churn',kind = 'box',data=originalDF) #there is some difference
-sb.catplot(x='StreamingTV',y='tenure',hue='Churn',kind = 'box',data=originalDF) #StreamingTV customers have higher tenure, some have churn some not
-sb.catplot(x='DeviceProtection',y='tenure',hue='Churn',kind = 'box',data=originalDF) #StreamingTV customers have higher tenure. Only StreamingTV customer with lower tenures have churn
-sb.catplot(x='DeviceProtection',y='MonthlyCharges',hue='Churn',kind = 'box',data=originalDF) #StreamingTV customers have higher tenure. Only StreamingTV customer with lower tenures have churn
-sb.catplot(x='Churn',y='MonthlyCharges',kind = 'box',data=originalDF) #Monthly Charges have some influence on churn, higher monthly charge higher churn
-sb.catplot(x='Churn',y='TotalCharges',kind = 'box',data=originalDF) #Total Charges have some influence on churn, Lower Total Charges have positive affect on churn'''
-#sb.scatterplot(x='tenure',y='MonthlyCharges',hue = 'Churn',data=originalDF ) # the distribution seems classifiable by linear method
+    # summaries https://www.shanelynn.ie/summarising-aggregation-and-grouping-data-in-python-pandas/
 
-'''
-f, ax = plt.subplots(figsize=(10, 8))
-corr = dataDF.corr()
-sb.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sb.diverging_palette(220, 10, as_cmap=True),
-            square=True, ax=ax)
+    print('sum of Tenure per churn' + repr(originalDF.groupby('Churn')['tenure'].sum()))
+    print('sum of churn per gender ' + repr(dataDF.groupby('SeniorCitizen')['Churn'].sum()))
 
-plt.show()
-'''
+    # why am I not able to work with dataDF
 
-#https://github.com/SSaishruthi/LogisticRegression_Vectorized_Implementation/blob/master/Logistic_Regression.ipynb
-
-'''scaler       = StandardScaler()
-outcomeVarDF = scaler.fit_transform(outcomeVarDF)'''
-
-# Train Logistic Regression model with all features
-
-X_train, X_test, y_train, y_test = train_test_split(fdataDF,outcomeVarDF,test_size=0.2, random_state=42)
+    # plot relationships
 
 
-# train with RandomForestClassifier
-clf = RandomForestClassifier(random_state=0).fit(X_train,y_train)
-print('RF Model fitted with'+ repr(40) + 'features\n RF feature importances\n')
-important_features = pd.Series(data=clf.feature_importances_,index=fdataDF.columns)
-feats = {} # a dict to hold feature_name: feature_importance
-for feature, importance in zip(fdataDF.columns, clf.feature_importances_):
-    feats[feature] = importance #add the name/value pair
+    # Box plot
+    #sb.catplot(x='gender',y='TotalCharges',hue = 'Churn', data=originalDF) #equal churns in gender
 
-importances = pd.DataFrame.from_dict(feats, orient='index').rename(columns={0: 'Gini-importance'})
-importances.sort_values(by='Gini-importance').plot(kind='bar', rot=90)
-plt.rcParams.update({'font.size': 5})
-plt.show()
-print('RF decision path')
-pprint.pprint(clf.decision_path(X_train))
-y_pred = clf.predict(X_test)
-print('RF Score')
-print(clf.score(X_test,y_test))
-print('RMSE\n')
-print(np.sqrt(metrics.mean_squared_error(y_pred,y_test)))
-# computing permutation importance of each feature in dataset
-perm  = PermutationImportance(clf, random_state=1).fit(X_train, y_train)
 
-# # create a structured array
-# dtype = [('feature', str), ('permutation_weights', float)]
-features = np.array(X_train.columns.to_list())
-permF = np.array([X_train.columns.to_list, perm.feature_importances_])
-rankedFeatureIds   = perm.feature_importances_.argsort()[::-1] #[::-1] reverses the ascending result of argsort, indices of arrays sorted
-rankedFeatures     = features[rankedFeatureIds]
-numRanks           = 15 # RF: At 15 (score:0.786) and 30 max scores. Score declines with decreasing features
-                        # LR: at 10 scores were less than full-set but at 15 features, scores halved.
-                        # With PermutationInporatance RF performs better than LR
-featuresTopNRanks  = list(rankedFeatures[0:numRanks])
-featuresToDrop     = list(rankedFeatures[numRanks:-1])
-print('Selected features \n', featuresTopNRanks)
-print('features to drop:\n', repr(featuresToDrop))
-# print('Feature importance in accordance to weights\n')
-# print(features[permFeatureRanks])
 
-# only for printing in readable format
-permExpWghts = eli5.explain_weights(perm,feature_names = X_train.columns.to_list())
-permFeatureRanksText =eli5.format_as_text(permExpWghts) # only for printing
-print(permFeatureRanksText)
+    #sb.catplot(x='SeniorCitizen',y='tenure',hue='Churn',kind= 'box',data=originalDF) #the strip, default shows that seniors are more churned
 
-# based on importance, select only top 10 columns for building model
+    #sb.catplot(x='Churn',y='tenure',kind='box',data = originalDF) # we can see tenure is a significant predictor
 
-dataDFp = dataDF.copy()
-fdataDFp = dataDFp[featuresTopNRanks]
-X_train, X_test, y_train, y_test = train_test_split(fdataDFp,outcomeVarDF,test_size=0.2, random_state=42)
-clf = RandomForestClassifier(random_state=0).fit(X_train,y_train)
+    '''sb.catplot(x='gender',y='tenure',hue='Churn',kind = 'box',data=originalDF) #there is no difference
+    sb.catplot(x='SeniorCitizen',y='tenure',hue='Churn',kind = 'box',data=originalDF) #there is some difference
+    sb.catplot(x='StreamingTV',y='tenure',hue='Churn',kind = 'box',data=originalDF) #StreamingTV customers have higher tenure, some have churn some not
+    sb.catplot(x='DeviceProtection',y='tenure',hue='Churn',kind = 'box',data=originalDF) #StreamingTV customers have higher tenure. Only StreamingTV customer with lower tenures have churn
+    sb.catplot(x='DeviceProtection',y='MonthlyCharges',hue='Churn',kind = 'box',data=originalDF) #StreamingTV customers have higher tenure. Only StreamingTV customer with lower tenures have churn
+    sb.catplot(x='Churn',y='MonthlyCharges',kind = 'box',data=originalDF) #Monthly Charges have some influence on churn, higher monthly charge higher churn
+    sb.catplot(x='Churn',y='TotalCharges',kind = 'box',data=originalDF) #Total Charges have some influence on churn, Lower Total Charges have positive affect on churn'''
+    #sb.scatterplot(x='tenure',y='MonthlyCharges',hue = 'Churn',data=originalDF ) # the distribution seems classifiable by linear method
 
-print('RF Model fitted with'+ repr(numRanks) + 'features\n RF feature importances\n')
-important_features = pd.Series(data=clf.feature_importances_[0:numRanks],index=featuresTopNRanks)
-feats = {} # a dict to hold feature_name: feature_importance
-for feature, importance in zip(featuresTopNRanks, clf.feature_importances_[0:numRanks]):
-    feats[feature] = importance #add the name/value pair
+    '''
+    f, ax = plt.subplots(figsize=(10, 8))
+    corr = dataDF.corr()
+    sb.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sb.diverging_palette(220, 10, as_cmap=True),
+                square=True, ax=ax)
 
-importances = pd.DataFrame.from_dict(feats, orient='index').rename(columns={0: 'Gini-importance'})
-importances.sort_values(by='Gini-importance').plot(kind='bar', rot=90)
-plt.rcParams.update({'font.size': 5})
-plt.show()
-print('RF Score')
-print(clf.score(X_test,y_test))
-print('RF decision path')
-pprint.pprint(clf.decision_path(X_train))
-y_pred = clf.predict(X_test)
-print('RMSE\n')
-print(np.sqrt(metrics.mean_squared_error(y_pred,y_test)))
+    plt.show()
+    '''
+
+    #https://github.com/SSaishruthi/LogisticRegression_Vectorized_Implementation/blob/master/Logistic_Regression.ipynb
+
+    '''scaler       = StandardScaler()
+    outcomeVarDF = scaler.fit_transform(outcomeVarDF)'''
+
+    # Train Logistic Regression model with all features
+
+    X_train, X_test, y_train, y_test = train_test_split(fdataDF,outcomeVarDF,test_size=0.2, random_state=42)
+
+
+    # train with RandomForestClassifier
+    clf = RandomForestClassifier(random_state=0).fit(X_train,y_train)
+    print('RF Model fitted with'+ repr(40) + 'features\n RF feature importances\n')
+    important_features = pd.Series(data=clf.feature_importances_,index=fdataDF.columns)
+    feats = {} # a dict to hold feature_name: feature_importance
+    for feature, importance in zip(fdataDF.columns, clf.feature_importances_):
+        feats[feature] = importance #add the name/value pair
+
+    importances = pd.DataFrame.from_dict(feats, orient='index').rename(columns={0: 'Gini-importance'})
+    importances.sort_values(by='Gini-importance').plot(kind='bar', rot=90)
+    plt.rcParams.update({'font.size': 5})
+    plt.show()
+    print('RF decision path')
+    pprint.pprint(clf.decision_path(X_train))
+    y_pred = clf.predict(X_test)
+    print('RF Score')
+    print(clf.score(X_test,y_test))
+    print('RMSE\n')
+    print(np.sqrt(metrics.mean_squared_error(y_pred,y_test)))
+    # computing permutation importance of each feature in dataset
+    perm  = PermutationImportance(clf, random_state=1).fit(X_train, y_train)
+
+    # # create a structured array
+    # dtype = [('feature', str), ('permutation_weights', float)]
+    features = np.array(X_train.columns.to_list())
+    permF = np.array([X_train.columns.to_list, perm.feature_importances_])
+    rankedFeatureIds   = perm.feature_importances_.argsort()[::-1] #[::-1] reverses the ascending result of argsort, indices of arrays sorted
+    rankedFeatures     = features[rankedFeatureIds]
+    numRanks           = 15 # RF: At 15 (score:0.786) and 30 max scores. Score declines with decreasing features
+                            # LR: at 10 scores were less than full-set but at 15 features, scores halved.
+                            # With PermutationInporatance RF performs better than LR
+    featuresTopNRanks  = list(rankedFeatures[0:numRanks])
+    featuresToDrop     = list(rankedFeatures[numRanks:-1])
+    print('Selected features \n', featuresTopNRanks)
+    print('features to drop:\n', repr(featuresToDrop))
+    # print('Feature importance in accordance to weights\n')
+    # print(features[permFeatureRanks])
+
+    # only for printing in readable format
+    permExpWghts = eli5.explain_weights(perm,feature_names = X_train.columns.to_list())
+    permFeatureRanksText =eli5.format_as_text(permExpWghts) # only for printing
+    print(permFeatureRanksText)
+
+    # based on importance, select only top 10 columns for building model
+
+    dataDFp = dataDF.copy()
+    fdataDFp = dataDFp[featuresTopNRanks]
+    X_train, X_test, y_train, y_test = train_test_split(fdataDFp,outcomeVarDF,test_size=0.2, random_state=42)
+    clf = RandomForestClassifier(random_state=0).fit(X_train,y_train)
+
+    print('RF Model fitted with'+ repr(numRanks) + 'features\n RF feature importances\n')
+    important_features = pd.Series(data=clf.feature_importances_[0:numRanks],index=featuresTopNRanks)
+    feats = {} # a dict to hold feature_name: feature_importance
+    for feature, importance in zip(featuresTopNRanks, clf.feature_importances_[0:numRanks]):
+        feats[feature] = importance #add the name/value pair
+
+    importances = pd.DataFrame.from_dict(feats, orient='index').rename(columns={0: 'Gini-importance'})
+    importances.sort_values(by='Gini-importance').plot(kind='bar', rot=90)
+    plt.rcParams.update({'font.size': 5})
+    plt.show()
+    print('RF Score')
+    print(clf.score(X_test,y_test))
+    print('RF decision path')
+    pprint.pprint(clf.decision_path(X_train))
+    y_pred = clf.predict(X_test)
+    print('RMSE\n')
+    print(np.sqrt(metrics.mean_squared_error(y_pred,y_test)))
 
